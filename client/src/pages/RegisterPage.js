@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Card, Form, Button, Alert } from "react-bootstrap";
-import { loginUser } from "../services/authService";
+import { registerUser } from "../services/authService";
 import { useNavigate, Link } from "react-router-dom";
 
-const LoginPage = () => {
+const RegisterPage = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -14,12 +16,24 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
+    }
+
     try {
-      await loginUser({ email, password });
+      await registerUser({ name, email, password });
       navigate("/tasks");
     } catch (err) {
-      setError("Invalid email or password. Please try again.");
+      setError("Registration failed. Email might already be in use.");
     } finally {
       setLoading(false);
     }
@@ -33,8 +47,8 @@ const LoginPage = () => {
             <Card className="shadow">
               <Card.Body className="p-4">
                 <div className="text-center mb-4">
-                  <h2 className="fw-bold text-dark">🔑 Login</h2>
-                  <p className="text-muted">Welcome back! Please sign in to your account.</p>
+                  <h2 className="fw-bold text-dark">📝 Register</h2>
+                  <p className="text-muted">Create your account to get started!</p>
                 </div>
 
                 {error && (
@@ -44,6 +58,17 @@ const LoginPage = () => {
                 )}
 
                 <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Full Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </Form.Group>
+
                   <Form.Group className="mb-3">
                     <Form.Label>Email Address</Form.Label>
                     <Form.Control
@@ -59,9 +84,20 @@ const LoginPage = () => {
                     <Form.Label>Password</Form.Label>
                     <Form.Control
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Create a password (min 6 characters)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Confirm Password</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                     />
                   </Form.Group>
@@ -72,15 +108,15 @@ const LoginPage = () => {
                     className="w-100 mb-3"
                     disabled={loading}
                   >
-                    {loading ? "Signing in..." : "🔑 Sign In"}
+                    {loading ? "Creating account..." : "📝 Create Account"}
                   </Button>
                 </Form>
 
                 <div className="text-center">
                   <p className="mb-0">
-                    Don't have an account?{" "}
-                    <Link to="/register" className="text-dark fw-semibold">
-                      📝 Register here
+                    Already have an account?{" "}
+                    <Link to="/login" className="text-dark fw-semibold">
+                      🔑 Login here
                     </Link>
                   </p>
                 </div>
@@ -93,4 +129,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

@@ -1,30 +1,45 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import connectDB from './config/db.js';
+// server.js
 
-dotenv.config(); // Load .env variables
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import taskRoutes from './routes/taskRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+
+dotenv.config(); // Load environment variables
 
 const app = express();
 
-// Middleware to parse JSON
+// Middleware
+app.use(cors());
 app.use(express.json());
+app.use('/api/users', userRoutes);
 
-// Connect to MongoDB
-connectDB();
+// MongoDB Connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
+// Routes
+app.use('/api/tasks', taskRoutes);
+app.use('/api/auth', authRoutes);
+
+// Test Route
 app.get('/', (req, res) => {
-  res.send('API is running...');
+  res.send('Server is running...');
 });
 
+// Global Error Handler (for all routes)
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log full error in console
+  res.status(500).json({ error: 'Something went wrong!' }); // Send error response
+});
+
+// Start Server
 const PORT = process.env.PORT || 5000;
-
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error(`Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
 });
